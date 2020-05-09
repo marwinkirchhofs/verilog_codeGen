@@ -2,17 +2,6 @@
 This tool generates a code body for a verilog/systemverilog module. You can specify characteristics like input/output ports and parameters directly as command line arguments. The tool also generates a leading commentary section with templates for each specified property. For more precise information refer to the usage section.
 
 
-## Installation
-The generator works instantly after cloning the repository. The `install.sh` file provides two additional functionalities which can be triggered independently by relative flags:
-* Symlinking in a bin directory  
-	`[sudo] ./install.sh -l [path]` creates a symlink in a directory. `[path]` defaults to `/usr/local/bin`, if it is in your `$PATH`, otherwise it defaults to `/usr/bin` (both usually requiring root permissions to write).  
-If you specify a path, no `$PATH` checking is applied. 
-
-* Automatical update checking  
-	`./install.sh -u` fetches the submodule "git_update_check". It contains a simple script which simply checks for a new version of the module generator at each usage. (It is only invoked by the main program if it exists).
-In case of a new version, it asks, if you want to update your version or just continue. (TODO: Provide option to show tag message)
-
-
 ## Usage
 `verilog_genModule [options] module_name`  
 
