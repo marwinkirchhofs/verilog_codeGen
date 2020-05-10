@@ -1,8 +1,0 @@
-.gitignore
-
-git_update_check
-
-*.bak
-
-*.v
-*.sv
