@@ -39,7 +39,7 @@ display help messages
 ##### respective wrapper in systemverilog by other user:  
 `verilog_genModule -i clk,rst_n,uart_rxd_out -o symbol_o#8,newSymbol_o --timescale 1ns/1ps -a "N. Otjohndoe" --tabwidth=8 --sv wrapper_uartRx`
 
-resulting files:  
+##### resulting files: 
 uartRx.v  
 wrapper_uartRx.sv
 

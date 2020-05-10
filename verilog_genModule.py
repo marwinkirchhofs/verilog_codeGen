@@ -9,22 +9,18 @@
 #   #### usage ####
 #   ###############
 #
-#   verilog_genModule [-i <input ports> -o <output ports> --output-reg -p <parameters> --timescale <timescale> --sv/systemverilog/SystemVerilog --include-guards] <name of module> 
+#   verilog_genModule [-i <input ports> -o <output ports> --output-reg -p <parameters> --timescale <timescale> --sv/systemverilog/SystemVerilog --include-guards -a/--author <author> --tabwidth <tabwidth>] <name of module> 
 # 
-#T  TODO: allow for a file name to be passed instead of a module name -> derive verilog/systemverilog from filename extension
-#   TODO: -t/--tb option for automatically generating a testbench body (may include tb-respective tool, haven't evaluated yet)
-#   TODO: call update script on launch 
-#
 #
 #   #################
 #   #### example ####
 #   #################
 #
 #   uart receiver in verilog:
-#   verilog_genModule -i clk,rst_n,uart_i -o symbol_o,newSymbol_o --output-reg -p CLK_FREQ,BAUD_RATE --include-guards uartRx
+#   verilog_genModule -i clk,rst_n,uart_i -o symbol_o#MSG_BITS,newSymbol_o --output-reg -p CLK_FREQ,BAUD_RATE,MSG_BITS --include-guards --author="John Doe" uartRx
 #
 #   respective wrapper in systemverilog:
-#   verilog_genModule -i clk,rst_n,uart_rxd_out -o symbol_o,newSymbol_o --timescale 1ns/1ps --sv wrapper_uartRx
+#   verilog_genModule -i clk,rst_n,uart_rxd_out -o symbol_o#8,newSymbol_o --timescale 1ns/1ps -a "N. Otjohndoe" --tabwidth=8 --sv wrapper_uartRx
 #
 #   resulting files: 
 #   uartRx.v, uartRx.sv
