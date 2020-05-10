@@ -39,7 +39,7 @@ def writeBlankLines(filename, number, leading_string=None):
         if leading_string: filename.writelines(leading_string)
         filename.writelines("\n")
 
-#
+
 # extract port name from port_description
 def get_port_name(port_description):
     return port_description.split('#')[0]
@@ -119,15 +119,41 @@ if __name__ == '__main__':
     ####################################
 
     parser = OptionParser()
-    parser.add_option("-i", dest="inputs", help="input ports (comma-separated list) - port width syntax: <port_name>#<port_width> (port_width can be int or string, e.g. a parameter identifier) - specifying port_width is optional - example: \"-i data_i#MSG_BITS,btn_i#2,clk\"", metavar="input_ports")
-    parser.add_option("-o", dest="outputs", help="output ports (comma-separated list) - port_width exactly the same as input ports", metavar="output_ports")
-    parser.add_option("--output-reg", action="store_true", dest="output_reg", help="create output register variables")
-    parser.add_option("-p", dest="parameters", help="parameter list (comma-separated")
-    parser.add_option("--timescale", dest="timescale", help="timescale definition (e.g. \"1ns/1ps\")", metavar="timescale")
-    parser.add_option("--sv", "--systemverilog", "--SystemVerilog", action="store_true", dest="systemverilog", help="if set, SystemVerilog is used instead of verilog")
-    parser.add_option("--include-guards", action="store_true", dest="include_guards", help="inserts include guards")
-    parser.add_option("-a", "--author", dest="author", help="specify author (pass as string)", metavar="author")
-    parser.add_option("--tabwidth", dest="tabwidth", help="specify tabwidth for proper indentation, defaults to 4", metavar="tabwidth")
+    parser.add_option("-i",
+            dest="inputs",
+            help="input ports (comma-separated list) - port width syntax: <port_name>#<port_width> (port_width can be int or string, e.g. a parameter identifier) - specifying port_width is optional - example: \"-i data_i#MSG_BITS,btn_i#2,clk\"",
+            metavar="input_ports")
+    parser.add_option("-o",
+            dest="outputs",
+            help="output ports (comma-separated list) - port_width exactly the same as input ports",
+            metavar="output_ports")
+    parser.add_option("--output-reg",
+            action="store_true",
+            dest="output_reg",
+            help="create output register variables")
+    parser.add_option("-p",
+            dest="parameters",
+            help="parameter list (comma-separated")
+    parser.add_option("--timescale",
+            dest="timescale",
+            help="timescale definition (e.g. \"1ns/1ps\")",
+            metavar="timescale")
+    parser.add_option("--sv","--systemverilog","--SystemVerilog",
+            action="store_true",
+            dest="systemverilog",
+            help="if set, SystemVerilog is used instead of verilog")
+    parser.add_option("--include-guards",
+            action="store_true",
+            dest="include_guards",
+            help="inserts include guards")
+    parser.add_option("-a","--author",
+            dest="author",
+            help="specify author (pass as string)",
+            metavar="author")
+    parser.add_option("--tabwidth",
+            dest="tabwidth",
+            help="specify tabwidth for proper indentation, defaults to 4",
+            metavar="tabwidth")
 
 
     #### parse options ####
@@ -286,7 +312,6 @@ if __name__ == '__main__':
 
         file_out.writelines("\t// output registers\n")
         for port in list_outputs:
-#            file_out.writelines("\t" + s_regType + "\t\t\t" + port + ";\n")
             file_out.writelines("\t" + s_printPort(port_description=port, port_type=s_regType, tabwidth=tabwidth) + ";\n" )
 
     
