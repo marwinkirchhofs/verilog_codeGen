@@ -1,4 +1,4 @@
-# Verilog module generator
+# Verilog/SystemVerilog module generator
 This tool generates a code body for a verilog/systemverilog module. You can specify characteristics like input/output ports and parameters directly as command line arguments. The tool also generates a leading commentary section with templates for each specified property. For more precise information refer to the usage section.  
 
 If you encounter any errors or have suggestions, please feel free to contact me. [I myself do not have years of Verilog experience. It just felt like a good idea to write this tool during some private projects ;-) ] 
