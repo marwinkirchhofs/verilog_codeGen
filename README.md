@@ -6,6 +6,7 @@ If you encounter any errors or have suggestions, please feel free to contact me.
 
 ## Usage
 `verilog_genModule [options] module_name`  
+(assuming you symlinked `verilog_genModule.py` to `verilog_genModule` somewhere in your `$PATH`)
 
 ##### options
 * input ports: `-i <port_name_1>#<port_width_1>,<port_name_2>,...`   
