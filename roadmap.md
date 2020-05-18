@@ -21,6 +21,7 @@ used to hold a VerilogModule plus the additional information which doesn't funct
 * [ ] write_moduleFile (file_out)
 * [ ] write_testbenchFile (file_out)
 * [ ] scan (file_in)  
+  TODO: preprocess file_in to eliminate commentaries completely from the code (needed e.g. for error-safe module declaration scanning)
 scan input file for language and maybe author, pass to VerilogModule.scan
 --- 
 
@@ -33,15 +34,14 @@ hold relevant parameters of a verilog module
 * s_timescale
 * outputReg (boolean value)
 ###### functions
-* [ ] init(...)  
+* [x] init(...)  
 init by passing properties directly (intended to be used by module generator)
-* [ ] init(file_in)  
-call scanner
-* [ ] scan(file_in)  
-scan file_in and extract VerilogModule from it
+* [x] scan(file_in)  
+scan file_in and extract VerilogModule from it  
+TODO: is not able to handle Verilog 1995 style parameter declarations (declaration after module declaration); presumably will never be...
 * [ ] write_out(file_out, indentObj, language)  
 writes the whole module code body (functional part)
-* [ ] write_instantiation(file_out, indentObj)
+* [ ] write_instantiation(file_out, indentObj)  
 generates a module instantiation (connected variable names equal to internal port names)
 ---
 
@@ -53,13 +53,28 @@ full port description
 * width (ideally directly as string to handle different formats)
 ###### functions
 * [x] scan(s_lineIn)  
-	scans a line of code and attempts to extract a port from it
+	scans a line of code and attempts to extract a port from it  
+	TODO: does only work with one-dimensional (packed) ports
 * [x] write_declaration(file_out, indentObj, language)  
 	write out port declaration (e.g. "input	[7:0] bits")
 * [x] write_reg(file_out, indentObj, language)  
 	write corresponding variable (e.g. "reg [7:0] bits")
 * [x] write_instantiation(file_out, indentObj)  
   	write port instantiation (e.g. ".portName	(portName)")
+---
+
+#### class 'VerilogParameter'  
+full parameter description  
+###### attributes  
+* identifier
+* default value
+###### functions
+* [ ] scan(s_lineIn)  
+	scans a line of code and attempts to extract parameters port from it
+* [ ] write_declaration(file_out, indentObj, language)  
+	write out parameter declaration (e.g. "parameter MY_PARAM")
+* [ ] write_instantiation(file_out, indentObj)  
+  	write parameter instantiation (e.g. ".PARAM_NAME (PARAM_NAME)")
 ---
 
 #### module HelperFunctions

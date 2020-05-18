@@ -7,20 +7,21 @@ import re
 from VerilogCodeGen_Helper import *
 
 class VerilogPort:
-    """
-    represents a Verilog Port
+    """represents a Verilog Port
     """
 
     # valid port types for comparison in instantiation/scanning
     __validPortTypes = ("input","output","inout")
+    # (TODO:) maybe move those patterns as static parameters to the scan method, if they don't get used somewhere else
     # pattern to match a port declaration 
-    # -> group(1): portType, group(2): s_portWidthDeclaration (may be empty), group(3): identifier
-    __validPortDeclaration_pattern = r"\s*(input|output|inout)\s*(\[[\w-]+:[\w-]+\]|)\s*([\w-]+)"
+    # -> group(1): portType, group(2): variable type (if given), group(3): s_portWidthDeclaration (if given)
+    __re_validPortDeclaration = r".*(input|output|inout)\s+(reg|wire|logic|)\s*(\[[\w-]+:[\w-]+\]|)"
+    # pattern to look for identifiers in a port declaration (with declaration part deleted by re.sub -> string starting with port name(s) )
+    __re_portIdentifier = r"[\w-]"
 
 
     def __init__(self, portType, identifier, portWidthDeclaration=None):
-        """
-        creates a VerilogPort, portWidthDeclaration defaults to None
+        """creates a VerilogPort, portWidthDeclaration defaults to None
         
         :portType: port type as string (one of "input", "output", "inout")
         :portWidthDeclaration: port width in bits as a string or int (e.g. 8, "MSG-BITS")
@@ -32,7 +33,7 @@ class VerilogPort:
             return None
         if not identifier:
             print("Identifier must not be empty!")
-            
+            return None
 
         self.portType   = portType
         self.identifier = identifier
@@ -54,32 +55,35 @@ class VerilogPort:
 
 
     def __str__(self):
-        return("portType: " + self.portType + ", identifier: " + self.identifier + ", portWidth: " + self.s_portWidthDeclaration)
+            return("portType: " + self.portType + ", identifier: " + self.identifier + ", portWidth: " + (self.s_portWidthDeclaration if self.s_portWidthDeclaration else "None"))
 
 
     @classmethod
     def scan(cls, s_lineIn):
-        """
-        scans s_lineIn (intended to be a line of Verilog module declaration) for a port declaration
+        """scans s_lineIn (intended to be a line of Verilog module declaration) for a port declaration
 
         :s_lineIn: line of Verilog code 
-        :returns: VerilogPort object if s_lineIn declared a port; None if not
+        :returns: VerilogPort object if s_lineIn declared a port; empty list if not
         """
         # check for port declaration and assign if declaration found
-        matchObj = re.search(cls.__validPortDeclaration_pattern, s_lineIn)
+        matchObj = re.search(cls.__re_validPortDeclaration, s_lineIn)
         if matchObj:
             portType = matchObj.group(1)
-            s_portWidthDeclaration = matchObj.group(2) if matchObj.group(2) else None
-            identifier = matchObj.group(3)
+            s_portWidthDeclaration = matchObj.group(3) if matchObj.group(3) else None
+            # find identifiers (may be multiple ones) in reduced input string (declaration removed by re.sub)
+            identifiers = re.findall( r"[\w-]+", re.sub( cls.__re_validPortDeclaration, "", s_lineIn, count=1 ) )
+             
+#             for identifier in re.findall( cls.__re_portIdentifier, re.sub( cls.__re_validPortDeclaration, "", s_lineIn ) ):
+#                 identifiers.append(identifier)
             
-            return cls(portType, identifier, s_portWidthDeclaration)
+            return [ cls(portType, identifier, s_portWidthDeclaration) for identifier in identifiers ]
+
         else: 
-            return None
+            return []
 
 
     def write_declaration(self, file_out, indentObj: IndentObj):
-        """
-        writes a port declaration (without leading or trailing whitespace characters) to the given output file (must be open)
+        """writes a port declaration (without leading or trailing whitespace characters) to the given output file (must be open)
 
         :file_out: output file
         :indentObj: IndentObj specifying tabwidth and desiredIndentation 
@@ -94,8 +98,7 @@ class VerilogPort:
 
 
     def write_reg(self, file_out, indentObj: IndentObj, language: HDL_Enum=HDL_Enum.VERILOG):
-        """ 
-        write an variable declaration to file_out according to the given language
+        """write a variable declaration to file_out according to the given language
         """
         if self.s_portWidthDeclaration:
             t_declaration = (language.get_regType(), self.s_portWidthDeclaration, self.identifier)
@@ -106,8 +109,7 @@ class VerilogPort:
 
 
     def write_instantiation(self, file_out, indentObj, removeIOSuffix=True):
-        """
-        writes a port instantiation (without leading or trailing characters) to the given output file (must be open)
+        """writes a port instantiation (without leading or trailing characters) to the given output file (must be open)
 
         :file_out: output file
         :indentObj: IndentObj specifying tabwidth and desiredIndentation 
