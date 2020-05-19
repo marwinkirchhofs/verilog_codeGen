@@ -35,27 +35,35 @@ class VerilogPort:
             print("Identifier must not be empty!")
             return None
 
-        self.portType   = portType
-        self.identifier = identifier
+        self.__portType   = portType
+        self.__identifier = identifier
         
         # determine correct port width declaration string (can be passed as int, as full declaration or as string e.g. representing a parameter)
         if portWidthDeclaration:
             try:
                 # check for int value
-                self.s_portWidthDeclaration = "[" + str(int(portWidthDeclaration) - 1) + ":0]"
+                self.__s_portWidthDeclaration = "[" + str(int(portWidthDeclaration) - 1) + ":0]"
             except:
                 if re.match(r"\[", portWidthDeclaration):
                     # full declaration passed
-                    self.s_portWidthDeclaration = portWidthDeclaration
+                    self.__s_portWidthDeclaration = portWidthDeclaration
                 else:
                     # parameter identifier passed
-                    self.s_portWidthDeclaration = "[" + portWidthDeclaration + "-1:0]"
+                    self.__s_portWidthDeclaration = "[" + portWidthDeclaration + "-1:0]"
         else:
-            self.s_portWidthDeclaration = None
+            self.__s_portWidthDeclaration = None
 
 
     def __str__(self):
-            return("portType: " + self.portType + ", identifier: " + self.identifier + ", portWidth: " + (self.s_portWidthDeclaration if self.s_portWidthDeclaration else "None"))
+        return("portType: " + self.__portType + ", identifier: " + self.__identifier + ", portWidth: " + (self.__s_portWidthDeclaration if self.__s_portWidthDeclaration else "None"))
+
+
+    def get_identifier(self):
+        return self.__identifier
+
+
+    def get_portType(self):
+        return self.__portType
 
 
     @classmethod
@@ -89,10 +97,10 @@ class VerilogPort:
         :indentObj: IndentObj specifying tabwidth and desiredIndentation 
         :language: "Verilog" or "SystemVerilog"
         """
-        if self.s_portWidthDeclaration:
-            t_declaration = (self.portType, self.s_portWidthDeclaration, self.identifier)
+        if self.__s_portWidthDeclaration:
+            t_declaration = (self.__portType, self.__s_portWidthDeclaration, self.__identifier)
         else:
-            t_declaration = (self.portType, self.identifier)
+            t_declaration = (self.__portType, self.__identifier)
 
         file_out.write( get_tabbedString(t_declaration, indentObj) )
 
@@ -100,10 +108,10 @@ class VerilogPort:
     def write_reg(self, file_out, indentObj: IndentObj, language: HDL_Enum=HDL_Enum.VERILOG):
         """write a variable declaration to file_out according to the given language
         """
-        if self.s_portWidthDeclaration:
-            t_declaration = (language.get_regType(), self.s_portWidthDeclaration, self.identifier)
+        if self.__s_portWidthDeclaration:
+            t_declaration = (language.get_regType(), self.__s_portWidthDeclaration, self.__identifier)
         else:
-            t_declaration = (language.get_regType(), self.identifier)
+            t_declaration = (language.get_regType(), self.__identifier)
         
         file_out.write( get_tabbedString(t_declaration, indentObj) )
 
@@ -115,10 +123,12 @@ class VerilogPort:
         :indentObj: IndentObj specifying tabwidth and desiredIndentation 
         """
         # remove trailing "_i/_o" in identifier for port naming in instantiation
-        if removeIOSuffix and re.search(r"[_i|_o]$", self.identifier):
-            s_instantiationName = self.identifier[:-2]
+#         if removeIOSuffix and re.search(r"(_i|_in|_input|_o|_out|_output)$", self.__identifier):
+#             s_instantiationName = self.__identifier[:-2]
+        if removeIOSuffix :
+            s_instantiationName = re.sub(r"(_i|_in|_input|_o|_out|_output)$", "", self.__identifier)
         else:
-            s_instantiationName = self.identifier
+            s_instantiationName = self.__identifier
 
-        t_declaration = ("." + self.identifier, "(" + s_instantiationName + ")") 
+        t_declaration = ("." + self.__identifier, "(" + s_instantiationName + ")") 
         file_out.write( get_tabbedString(t_declaration, indentObj) )

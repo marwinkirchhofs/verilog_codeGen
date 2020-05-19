@@ -67,7 +67,7 @@ class VerilogParameter:
         file_out.write( get_tabbedString(t_declaration, indentObj) )
 
 
-    def write_instantiation(self, file_out, indentObj, removeIOSuffix=True):
+    def write_instantiation(self, file_out, indentObj):
         """writes a parameter instantiation (without leading or trailing characters) to the given output file (must be open)
 
         :file_out: output file

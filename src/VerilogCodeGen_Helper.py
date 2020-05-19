@@ -74,3 +74,9 @@ def get_desiredTabIndentation(indentObj: IndentObj):
     """
     return int( indentObj.get_desiredTabIndentation() / indentObj.get_tabwidth() ) 
 
+
+# small helper to write blank lines to an open file
+def writeBlankLines(file_out, number, leading_string=None):
+    for i in range(number):
+        if leading_string: file_out.write(leading_string) 
+        file_out.write("\n")

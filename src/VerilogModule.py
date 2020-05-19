@@ -2,6 +2,7 @@
 import re, sys
 from VerilogPort import VerilogPort
 from VerilogParameter import VerilogParameter
+from VerilogCodeGen_Helper import *
 
 class VerilogModule():
     """
@@ -11,8 +12,10 @@ class VerilogModule():
     def __init__(self, moduleName, ports, parameters=None, s_timescale=None, outputReg: bool=False):
 
         self.moduleName     = moduleName
-        self.ports          = list(ports) if ports else []
-        self.parameters     = list(parameters) if parameters else []
+        self.ports          = { "input": [], "output": [], "inout": [] }
+        for port in ports:
+            self.ports[ port.get_portType() ].append(port)
+        self.l_parameters   = list(parameters) if parameters else []
         self.s_timescale    = s_timescale if s_timescale else ""
         self.outputReg      = outputReg
 
@@ -21,10 +24,14 @@ class VerilogModule():
         l_print = []
         l_print.extend( ["module: ", self.moduleName, "\n"] )
         l_print.extend( "parameters:\n" )
-        for parameter in self.parameters:
+        for parameter in self.l_parameters:
             l_print.extend( ["\t", str(parameter), "\n"] )
         l_print.extend( "ports:\n" )
-        for port in self.ports:
+        for port in self.ports["input"]:
+            l_print.extend( ["\t", str(port), "\n"] )
+        for port in self.ports["output"]:
+            l_print.extend( ["\t", str(port), "\n"] )
+        for port in self.ports["inout"]:
             l_print.extend( ["\t", str(port), "\n"] )
         l_print.extend( "timescale: " + self.s_timescale + "\n" )
         l_print.extend( "output registers: " + str(self.outputReg) )
@@ -96,6 +103,151 @@ class VerilogModule():
 
         # end of file reached without module declaration found
         return None
+
+
+    def write_timescale(self, file_out):
+        """writes a timescale definition to fileOut_Descriptor if self.s_timescale is not empty
+
+        :file_out: output file object
+        """
+        if file_out.closed:
+            print("file_out must be open!")
+            return None
+
+        if self.s_timescale: file_out.write( "`timescale\t" + self.s_timescale + "\n")
+
+
+    def write_declaration(self, file_out, indentObj: IndentObj, language: HDL_Enum=HDL_Enum.VERILOG):
+        """writes a complete module declaration to file_out (must be open!) 
+
+        :file_out: output file; may be passed as string or as file object
+        :indentObj: IndentObj to handle indentations
+        :language: HDL_Enum object to specify HDL language
+        """
+        if file_out.closed:
+            print("file_out must be open!")
+            return None
+
+        #### write module interface ####
+
+        # parameters
+        if self.l_parameters:
+            file_out.write("module " + self.moduleName + " #(\n")
+            for parameter in self.l_parameters:
+                file_out.write("\t")
+                parameter.write_declaration(file_out, indentObj)
+                if not parameter == self.l_parameters[-1]:
+                    file_out.write(",")
+                file_out.write("\n")
+
+            file_out.write(")\n")
+            file_out.write("(\n")
+        else:
+            file_out.write("module " + self.moduleName + " (\n")
+
+        # inputs
+        for port in self.ports["input"]:
+            file_out.write("\t")
+            port.write_declaration(file_out, indentObj)
+            if not port == self.ports["input"][-1] or self.ports["output"] or self.ports["inout"]:
+                file_out.write(",")
+            file_out.write("\n")
+
+        if self.ports["input"]: writeBlankLines(file_out,1)
+        
+        # outputs
+        for port in self.ports["output"]:
+            file_out.write("\t")
+            port.write_declaration(file_out, indentObj)
+            if not port == self.ports["output"][-1] or self.ports["inout"]:
+                file_out.write(",")
+            file_out.write("\n")
+
+        if self.ports["output"]: writeBlankLines(file_out,1)
+
+        # inout
+        for port in self.ports["inout"]:
+            file_out.write("\t")
+            port.write_declaration(file_out, indentObj)
+            if not port == self.ports["inout"][-1]:
+                file_out.write(",")
+            file_out.write("\n")
+
+        file_out.write(");\n")
+
+        #### output register instantiations ####
+
+        if self.outputReg:
+
+            writeBlankLines(file_out,1)
+            file_out.write("\t// output registers\n")
+            for port in self.ports["output"]:
+                file_out.write("\t")
+                port.write_reg(file_out, indentObj, language)
+                file_out.write(";\n")
+        
+        #### module body ####
+        writeBlankLines(file_out,5)
+
+        # end module
+        file_out.writelines("endmodule\n")
+
+
+    def write_instantiation(self, file_out, indentObj: IndentObj):
+        """writes a module istantiation to file_out (must be open!) 
+
+        :file_out: output file; may be passed as string or as file object
+        :indentObj: IndentObj to handle indentations
+        """
+        if file_out.closed:
+            print("file_out must be open!")
+            return None
+
+        #### write module interface ####
+
+        # parameters
+        if self.l_parameters:
+            file_out.write(self.moduleName + " #(\n")
+            for parameter in self.l_parameters:
+                file_out.write("\t")
+                parameter.write_instantiation(file_out, indentObj)
+                if not parameter == self.l_parameters[-1]:
+                    file_out.write(",")
+                file_out.write("\n")
+
+            file_out.write(") mod_" + self.moduleName + " (\n")
+        else:
+            file_out.write(self.moduleName + " mod_" + self.moduleName + " (\n")
+
+        # inputs
+        for port in self.ports["input"]:
+            file_out.write("\t")
+            port.write_instantiation(file_out, indentObj)
+            if not port == self.ports["input"][-1] or self.ports["output"] or self.ports["inout"]:
+                file_out.write(",")
+            file_out.write("\n")
+
+        if self.ports["input"]: writeBlankLines(file_out,1)
+        
+        # outputs
+        for port in self.ports["output"]:
+            file_out.write("\t")
+            port.write_instantiation(file_out, indentObj)
+            if not port == self.ports["output"][-1] or self.ports["inout"]:
+                file_out.write(",")
+            file_out.write("\n")
+
+        if self.ports["output"]: writeBlankLines(file_out,1)
+
+        # inout
+        for port in self.ports["inout"]:
+            file_out.write("\t")
+            port.write_instantiation(file_out, indentObj)
+            if not port == self.ports["inout"][-1]:
+                file_out.write(",")
+            file_out.write("\n")
+
+        file_out.write(");\n")
 
 
     @classmethod

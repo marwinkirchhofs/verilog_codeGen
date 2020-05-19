@@ -26,7 +26,8 @@ scan input file for language and maybe author, pass to VerilogModule.scan
 --- 
 
 #### class 'VerilogModule'  
-hold relevant parameters of a verilog module
+hold relevant parameters of a verilog module  
+TODO: move s_timescale to VerilogFile
 ###### attributes
 * moduleName  
 * list_ports
@@ -39,9 +40,9 @@ init by passing properties directly (intended to be used by module generator)
 * [x] scan(file_in)  
 scan file_in and extract VerilogModule from it  
 TODO: is not able to handle Verilog 1995 style parameter declarations (declaration after module declaration); presumably will never be...
-* [ ] write_out(file_out, indentObj, language)  
+* [x] write_declaration(file_out, indentObj, language)  
 writes the whole module code body (functional part)
-* [ ] write_instantiation(file_out, indentObj)  
+* [x] write_instantiation(file_out, indentObj)  
 generates a module instantiation (connected variable names equal to internal port names)
 ---
 
@@ -69,11 +70,11 @@ full parameter description
 * identifier
 * default value
 ###### functions
-* [ ] scan(s_lineIn)  
+* [x] scan(s_lineIn)  
 	scans a line of code and attempts to extract parameters port from it
-* [ ] write_declaration(file_out, indentObj, language)  
+* [x] write_declaration(file_out, indentObj, language)  
 	write out parameter declaration (e.g. "parameter MY_PARAM")
-* [ ] write_instantiation(file_out, indentObj)  
+* [x] write_instantiation(file_out, indentObj)  
   	write parameter instantiation (e.g. ".PARAM_NAME (PARAM_NAME)")
 ---
 
