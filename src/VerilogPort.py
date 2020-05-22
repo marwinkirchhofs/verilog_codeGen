@@ -40,14 +40,14 @@ class VerilogPort:
         self.__s_portWidthDeclaration = self.__parse_portWidthDeclaration(portWidthDeclaration)
         
 
-    def __init__(self, portType, s_portDescription):
+    @classmethod
+    def fromPortDescription(cls, portType, s_portDescription):
         """creates a VerilogPort for a port description with syntax: <portName>[#<portWidthDeclaration>]
         """
-        self.__portType = portType
-
         l_portProperties = re.split(r"#", s_portDescription)
-        self.__identifier = l_portProperties[0]
-        self.__s_portWidthDeclaration = self.__parse_portWidthDeclaration(l_portProperties[1]) if len(l_portProperties) > 1 else ""
+        identifier = l_portProperties[0]
+        s_portWidthDeclaration = cls.__parse_portWidthDeclaration(l_portProperties[1]) if len(l_portProperties) > 1 else ""
+        return cls(portType, identifier, s_portWidthDeclaration)
 
 
     @staticmethod

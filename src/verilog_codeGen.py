@@ -61,6 +61,7 @@
 from sys import exit
 from optparse import OptionParser
 from time import localtime, strftime
+from pathlib import Path
 import re
 from VerilogModule import VerilogModule
 from VerilogFile import VerilogFile
@@ -115,10 +116,10 @@ if __name__ == '__main__':
             action="store_true",
             dest="b_createTestbench",
             help="scans the specified input file and generates a suitable testbench")
-    parser.add_option("--module-instantiation","--mod-inst","--modInst",
-            action="store_true",
-            dest="b_moduleInstantiation",
-            help="searches the specified module and prints an instantiation")
+#     parser.add_option("--module-instantiation","--mod-inst","--modInst",
+#             action="store_true",
+#             dest="b_moduleInstantiation",
+#             help="searches the specified module and prints an instantiation")
     parser.add_option("-a","--author",
             dest="author",
             help="specify author (pass as string)",
@@ -133,8 +134,6 @@ if __name__ == '__main__':
 
     # call parser
     (options, args) = parser.parse_args()
-    print(args)
-    
 
     # check for module name
     if len(args) != 1 :
@@ -144,18 +143,26 @@ if __name__ == '__main__':
         re_validFileEnding = r"(\.v|\.sv)\s*$"
        
         # determine language
-        if options.systemverilog or re.search(r"\.sv", args[0]):
+        if options.systemverilog or re.search(r"\.sv", args[0]) or Path(args[0] + ".sv").is_file():
             language = HDL_Enum.SYSTEMVERILOG
         else:
             language = HDL_Enum.VERILOG
 
         if re.search(re_validFileEnding, args[0]):
             s_fileName = args[0]
-            s_moduleName = re.sub(re_validFileEnding, args[0])
+            s_moduleName = re.sub(re_validFileEnding, "", args[0])
         else:
             s_fileName = args[0] + "." + language.get_fileEnding()
             s_moduleName = args[0] 
 
+    # determine tabwidth
+    indentObj = IndentObj( tabwidth=int(options.tabwidth) if options.tabwidth else 4, desiredIndentation=24 )
+
+    # determine string for author name
+    s_author = options.author if options.author else ""
+
+    # determine timescale string
+    s_timescale = options.timescale if options.timescale else ""
 
     ###########################
     #### module generation ####
@@ -165,23 +172,17 @@ if __name__ == '__main__':
         # setup port/parameter lists
         ports = []
         for portDescription in options.inputs.split(',') if options.inputs else []:
-            ports.append( VerilogPort( portType="input", s_portDescription=portDescription ) )
+            ports.append( VerilogPort.fromPortDescription( portType="input", s_portDescription=portDescription ) )
         for portDescription in options.outputs.split(',') if options.outputs else []:
-            ports.append( VerilogPort( portType="output", s_portDescription=portDescription ) )
+            ports.append( VerilogPort.fromPortDescription( portType="output", s_portDescription=portDescription ) )
         parameters = []
         for parameterDescription in options.parameters.split(',') if options.parameters else []:
-            parameters.append( VerilogParameter( parameterDescription) )
-
-        # determine tabwidth
-        indentObj = IndentObj( tabwidth=int(options.tabwidth) if options.tabwidth else 4, desiredIndentation=24 )
-
-        # determine string for author name
-        s_author = options.author if options.author else ""
+            parameters.append( VerilogParameter.fromParameterDescription( parameterDescription) )
 
         verilogModule = VerilogModule( moduleName=s_moduleName, ports=ports, parameters=parameters, outputReg=options.output_reg)
         verilogFile = VerilogFile( verilogModule, 
-                            s_timescale=options.timescale if options.timescale else "",
-                            s_author=options.author if options.author else "",
+                            s_timescale=s_timescale,
+                            s_author=s_author,
                             includeGuards=options.b_include_guards,
                             indentObj=indentObj,
                             language=language )
@@ -200,14 +201,19 @@ if __name__ == '__main__':
     #### testbench generation ####
     ##############################
     if options.b_createTestbench:
-        # TODO
-        pass
+        verilogFile = VerilogFile.scan( s_fileName )
+        verilogFile.indentObj = indentObj
+        verilogFile.s_author = s_author
+        verilogFile.s_timescale = s_timescale
+        print("writing testbench file...")
+        verilogFile.write_testbenchFile()
+
     
     ##############################
     #### module instantiation ####
     ##############################
-    if options.b_moduleInstantiation:
-        # TODO
-        pass
+#     if options.b_moduleInstantiation:
+#         # TODO
+#         pass
 
     print("code generation done")

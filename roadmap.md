@@ -6,9 +6,10 @@
 ---
 
 #### file 'verilog_codeGenerator'
-* [ ] parse input arguments
-* [ ] decide action (module generation, additional testbench generation, module to testbench, module instantiation (TODO) )
-* [ ] invoke action
+* [x] parse input arguments
+* [x] decide action (module generation, additional testbench generation, module to testbench, module instantiation (TODO) )
+* [x] invoke action  
+TODO: implement module instantiation
 
 ---
 
