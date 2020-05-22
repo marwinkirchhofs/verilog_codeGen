@@ -5,6 +5,7 @@
 #
 
 from enum import Enum
+import re
 
 class IndentObj:
     """ holds tabwidth and desiredIndentation to be used by all write functions to provide proper indentations and alignments """
@@ -26,14 +27,36 @@ class HDL_Enum(Enum):
     VERILOG         = 1
     SYSTEMVERILOG   = 2
 
-    def get_regType(self):
-        """
-        returns register type (reg or logic) according to language type
+    def __str__(self):
+        if self is HDL_Enum.VERILOG:
+            return "Verilog"
+        else:
+            return "SystemVerilog"
+
+    def get_variableType(self, portType):
+        """returns the variable type according to portType and language
         """
         if self is HDL_Enum.VERILOG:
-            return "reg"
+            return "reg" if portType == "output" else "wire"
         else:
-            return "logic"
+            return "logic" if not portType == "inout" else "wire"
+
+    def get_connectionType(self, portType):
+        """returns the variable type for a connected variable according to portType and language
+        """
+        if self is HDL_Enum.VERILOG:
+            return "reg" if portType == "input" else "wire"
+        else:
+            return "wire" if portType == "inout" else "logic"
+
+    def get_fileEnding(self):
+        """
+        returns file ending ("sv"/"v") according to language type
+        """
+        if self is HDL_Enum.VERILOG:
+            return "v"
+        else:
+            return "sv"
 
 
 def get_tabbedString(elements, indentObj: IndentObj):
@@ -80,3 +103,14 @@ def writeBlankLines(file_out, number, leading_string=None):
     for i in range(number):
         if leading_string: file_out.write(leading_string) 
         file_out.write("\n")
+
+
+def removeIOSuffix(s_identifier):
+    """removes suffix specifying io-direction ("_i","_o" etc.) from s_identifier
+    example: port_i -> port
+
+    :s_identifier: input string
+    :returns: s_identifier without trailing io suffix
+
+    """
+    return re.sub(r"(_i|_in|_input|_o|_out|_output)$", "", s_identifier)

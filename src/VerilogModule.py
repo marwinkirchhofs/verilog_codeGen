@@ -9,14 +9,13 @@ class VerilogModule():
     functionally represents a Verilog module
     """
 
-    def __init__(self, moduleName, ports, parameters=None, s_timescale=None, outputReg: bool=False):
+    def __init__(self, moduleName, ports, parameters=None, outputReg: bool=False):
 
         self.moduleName     = moduleName
         self.ports          = { "input": [], "output": [], "inout": [] }
         for port in ports:
             self.ports[ port.get_portType() ].append(port)
         self.l_parameters   = list(parameters) if parameters else []
-        self.s_timescale    = s_timescale if s_timescale else ""
         self.outputReg      = outputReg
 
     
@@ -33,7 +32,6 @@ class VerilogModule():
             l_print.extend( ["\t", str(port), "\n"] )
         for port in self.ports["inout"]:
             l_print.extend( ["\t", str(port), "\n"] )
-        l_print.extend( "timescale: " + self.s_timescale + "\n" )
         l_print.extend( "output registers: " + str(self.outputReg) )
         
         return "".join(l_print)
@@ -45,13 +43,13 @@ class VerilogModule():
         scans file_in for a Verilog module declaration (looks for the first declaration!)
         If it finds a declaration, returns a corresponding VerilogModule object, otherwise returns None
 
-        :fileDescriptor: either a string or an read-open file
-        :returns: VerilogModule object if module declaration is found
+        :fileDescriptor: either a string or a read-open file
+        :returns: VerilogModule object if module declaration is found, else None
         """
         
-        # regular expressions to match timescale definition, module declaration, parameter declaration beginning/ending and port declaration beginning/ending
-        __re_timescaleDefintion = r"\s*`(timescale)\s*(\w+\s*/\s*\w+)"
-        __re_moduleDeclaration = r"\s*(module)\s*([\w-]+)\s*(\(|#\(|)"
+        # regular expression to match module declaration, parameter declaration beginning/ending and port declaration beginning/ending
+#         __re_moduleDeclaration = r"\s*module\s+([\w-]+)\s*(\(|#\(|)"
+        __re_moduleDeclaration = r"\s*module\s+([\w-]+)"
 
         l_parameters = []
         l_ports = []
@@ -65,56 +63,34 @@ class VerilogModule():
         # set file pointer to beginning
         file_in.seek(0)
 
-        moduleFound = False
-        s_timescale = ""
         l_ports = []
         l_parameters = []
 
         currentLine = file_in.readline()
 
         while currentLine:
-            # matchObj will either hold timescale specifiers in matchObj.group(2-3) or module declaration items in matchObj.group(4-6) (if not empty for sure)
-            matchObj = re.match("(" + __re_timescaleDefintion + "|" + __re_moduleDeclaration + ")", currentLine)
+            # matchObj will hold module declaration items in matchObj.group(4-6) (if not empty for sure)
+            matchObj = re.match( __re_moduleDeclaration , currentLine)
 
-            # decide between timescale or module declaration
-            if  matchObj and matchObj.group(2) == "timescale":
-                # remove whitespaces from identified timescale string
-                s_timescale = (matchObj.group(3)).replace(" ","")
-
-            elif matchObj and matchObj.group(4) == "module":
-                moduleFound = True
-
+            if matchObj:
+                
                 # set file pointer one line up to repeat readline() in scan subfunctions
                 file_in.seek( file_in.tell() - len(currentLine) )
                 
-                moduleName = matchObj.group(5)
+                moduleName = matchObj.group(1)
                 # scan for parameters and ports
                 l_parameters = cls.__scanParameters( file_in )
                 l_ports = cls.__scanPorts( file_in )
 
-            if moduleFound:
                 return cls( 
                         moduleName = moduleName, 
                         ports = l_ports,
-                        parameters = l_parameters, 
-                        s_timescale = s_timescale )
+                        parameters = l_parameters )
 
             currentLine = file_in.readline()
 
         # end of file reached without module declaration found
         return None
-
-
-    def write_timescale(self, file_out):
-        """writes a timescale definition to fileOut_Descriptor if self.s_timescale is not empty
-
-        :file_out: output file object
-        """
-        if file_out.closed:
-            print("file_out must be open!")
-            return None
-
-        if self.s_timescale: file_out.write( "`timescale\t" + self.s_timescale + "\n")
 
 
     def write_declaration(self, file_out, indentObj: IndentObj, language: HDL_Enum=HDL_Enum.VERILOG):
@@ -183,11 +159,11 @@ class VerilogModule():
             file_out.write("\t// output registers\n")
             for port in self.ports["output"]:
                 file_out.write("\t")
-                port.write_reg(file_out, indentObj, language)
+                port.write_variable(file_out, indentObj, language)
                 file_out.write(";\n")
         
         #### module body ####
-        writeBlankLines(file_out,5)
+        writeBlankLines(file_out,3)
 
         # end module
         file_out.writelines("endmodule\n")
@@ -248,6 +224,25 @@ class VerilogModule():
             file_out.write("\n")
 
         file_out.write(");\n")
+
+
+    def write_includeGuards(self, file_out, s_topBottom):
+        """writes include guards for top or bottom of file
+
+        :file_out:  opened output file
+        :s_topBottom: specify if top or bottom ("`ifndef ..." or "`endif ...") shall be written, valid values: "top"/"bottom"
+        """
+        # no file checking here, just a helper function
+        if s_topBottom == "top":
+            file_out.write("`ifndef " + self.moduleName.upper() + "_H\n")
+            file_out.write("`define " + self.moduleName.upper() + "_H\n")
+
+        elif s_topBottom == "bottom":
+            file_out.write("`endif\n")
+
+        else:
+            print("invalid file position declarator: " + s_topBottom)
+            return None
 
 
     @classmethod

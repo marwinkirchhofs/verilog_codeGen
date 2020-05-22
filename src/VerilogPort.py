@@ -37,21 +37,41 @@ class VerilogPort:
 
         self.__portType   = portType
         self.__identifier = identifier
+        self.__s_portWidthDeclaration = self.__parse_portWidthDeclaration(portWidthDeclaration)
         
-        # determine correct port width declaration string (can be passed as int, as full declaration or as string e.g. representing a parameter)
+
+    def __init__(self, portType, s_portDescription):
+        """creates a VerilogPort for a port description with syntax: <portName>[#<portWidthDeclaration>]
+        """
+        self.__portType = portType
+
+        l_portProperties = re.split(r"#", s_portDescription)
+        self.__identifier = l_portProperties[0]
+        self.__s_portWidthDeclaration = self.__parse_portWidthDeclaration(l_portProperties[1]) if len(l_portProperties) > 1 else ""
+
+
+    @staticmethod
+    def __parse_portWidthDeclaration(portWidthDeclaration):
+        """parses a port width declaration to the format [<width-1>:0]
+
+        :portWidthDeclaration: can be passed as int, as full declaration or as string e.g. representing a parameter
+        :returns: string containing a valid parameter width declaration
+        """
         if portWidthDeclaration:
             try:
                 # check for int value
-                self.__s_portWidthDeclaration = "[" + str(int(portWidthDeclaration) - 1) + ":0]"
+                s_portWidthDeclaration = "[" + str(int(portWidthDeclaration) - 1) + ":0]"
             except:
                 if re.match(r"\[", portWidthDeclaration):
                     # full declaration passed
-                    self.__s_portWidthDeclaration = portWidthDeclaration
+                    s_portWidthDeclaration = portWidthDeclaration
                 else:
                     # parameter identifier passed
-                    self.__s_portWidthDeclaration = "[" + portWidthDeclaration + "-1:0]"
+                    s_portWidthDeclaration = "[" + portWidthDeclaration + "-1:0]"
         else:
-            self.__s_portWidthDeclaration = None
+            s_portWidthDeclaration = None
+
+        return s_portWidthDeclaration
 
 
     def __str__(self):
@@ -105,28 +125,40 @@ class VerilogPort:
         file_out.write( get_tabbedString(t_declaration, indentObj) )
 
 
-    def write_reg(self, file_out, indentObj: IndentObj, language: HDL_Enum=HDL_Enum.VERILOG):
-        """write a variable declaration to file_out according to the given language
+    def write_variable(self, file_out, indentObj: IndentObj, language: HDL_Enum, b_removeIOSuffix: bool=False):
+        """write a variable declaration to file_out according to the given language and port type (input, inout -> wire; output -> reg)
         """
+        s_variableIdentifier = self.__identifier if not b_removeIOSuffix else removeIOSuffix(self.__identifier)
+
         if self.__s_portWidthDeclaration:
-            t_declaration = (language.get_regType(), self.__s_portWidthDeclaration, self.__identifier)
+            t_declaration = (language.get_variableType(self.__portType), self.__s_portWidthDeclaration, s_variableIdentifier)
         else:
-            t_declaration = (language.get_regType(), self.__identifier)
+            t_declaration = (language.get_variableType(self.__portType), s_variableIdentifier)
         
         file_out.write( get_tabbedString(t_declaration, indentObj) )
 
 
-    def write_instantiation(self, file_out, indentObj, removeIOSuffix=True):
+    def write_connectedVariable(self, file_out, indentObj: IndentObj, language: HDL_Enum, b_removeIOSuffix: bool=True):
+        """write a variable declaration for a connected variable (e.g. in a testbench) to file_out according to the given language and port type (input -> reg, output, inout -> wire)
+        """
+        s_variableIdentifier = self.__identifier if not b_removeIOSuffix else removeIOSuffix(self.__identifier)
+
+        if self.__s_portWidthDeclaration:
+            t_declaration = (language.get_connectionType(self.__portType), self.__s_portWidthDeclaration, s_variableIdentifier)
+        else:
+            t_declaration = (language.get_connectionType(self.__portType), s_variableIdentifier)
+        
+        file_out.write( get_tabbedString(t_declaration, indentObj) )
+
+
+    def write_instantiation(self, file_out, indentObj, b_removeIOSuffix=True):
         """writes a port instantiation (without leading or trailing characters) to the given output file (must be open)
 
         :file_out: output file
         :indentObj: IndentObj specifying tabwidth and desiredIndentation 
         """
-        # remove trailing "_i/_o" in identifier for port naming in instantiation
-#         if removeIOSuffix and re.search(r"(_i|_in|_input|_o|_out|_output)$", self.__identifier):
-#             s_instantiationName = self.__identifier[:-2]
-        if removeIOSuffix :
-            s_instantiationName = re.sub(r"(_i|_in|_input|_o|_out|_output)$", "", self.__identifier)
+        if b_removeIOSuffix :
+            s_instantiationName = removeIOSuffix(self.__identifier)
         else:
             s_instantiationName = self.__identifier
 

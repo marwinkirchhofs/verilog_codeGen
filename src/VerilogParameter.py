@@ -28,6 +28,14 @@ class VerilogParameter:
         self.defaultValue = defaultValue 
 
 
+    def __init__(self, s_parameterDescription):
+        """creates a VerilogParameter for a parameter description with syntax: <parameterName>[=<default value>]
+        """
+        l_parameterProperties = re.split(r"=", s_parameterDescription)
+        self.identifier = l_parameterProperties[0]
+        self.defaultValue = l_parameterProperties[1] if len(l_parameterProperties) > 1 else ""
+
+
     def __str__(self):
         return("identifier: " + self.identifier + ", default value: " + self.defaultValue)
 

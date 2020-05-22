@@ -1,10 +1,28 @@
 # Roadmap Verilog module generator (testbench extension)
 
+#### general TODOs
+* [ ] make it possible for each command to pass either a module or a file name as argument (don't ask me which classes are affected by this)
+ 
+---
 
 #### file 'verilog_codeGenerator'
 * [ ] parse input arguments
-* [ ] decide action (module generation, additional testbench generation, module to testbench, module instantiation (TODO)
+* [ ] decide action (module generation, additional testbench generation, module to testbench, module instantiation (TODO) )
 * [ ] invoke action
+
+---
+
+#### class 'Verilog_codeGen_config'
+class to hold a configuration containing:
+* search paths for module instantiation
+* author  
+###### methods
+* [ ] readConfig(cls, file_in)  
+  reads a config file (no idea of which format yet) and returns a Verilog_codeGen_config object in case of successful reading
+* [ ] findModule(self, moduleName)  
+  find the specified module in the search paths (recursively), order:  1) current working directory, 2) search paths
+if multiple modules found, prompt which one should be instantiated  
+(TODO: maybe this method fits better in an own class or somewhere else, we will see. But this way it has direct access to the search path variable)
 
 ---
 
@@ -12,15 +30,16 @@
 used to hold a VerilogModule plus the additional information which doesn't functionally belong to the module
 ###### attributes
 * verilogModule 
+* s_timescale
 * author
 * creationDate
 * indentObj
 * includeGuards
 * language
 ###### functions
-* [ ] write_moduleFile (file_out)
-* [ ] write_testbenchFile (file_out)
-* [ ] scan (file_in)  
+* [x] write_moduleFile (file_out)
+* [x] write_testbenchFile (file_out)
+* [x] scan (file_in)  
   TODO: preprocess file_in to eliminate commentaries completely from the code (needed e.g. for error-safe module declaration scanning)
 scan input file for language and maybe author, pass to VerilogModule.scan
 --- 
@@ -32,7 +51,6 @@ TODO: move s_timescale to VerilogFile
 * moduleName  
 * list_ports
 * list_parameters
-* s_timescale
 * outputReg (boolean value)
 ###### functions
 * [x] init(...)  
