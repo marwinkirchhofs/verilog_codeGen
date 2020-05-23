@@ -29,7 +29,7 @@ class VerilogParameter:
 
 
     @classmethod
-    def fromParameterDescription(self, s_parameterDescription):
+    def fromParameterDescription(cls, s_parameterDescription):
         """creates a VerilogParameter for a parameter description with syntax: <parameterName>[=<default value>]
         """
         l_parameterProperties = re.split(r"=", s_parameterDescription)
