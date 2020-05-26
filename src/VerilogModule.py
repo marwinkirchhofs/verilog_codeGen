@@ -1,5 +1,5 @@
 
-import re, sys
+import re, sys, os
 from VerilogPort import VerilogPort
 from VerilogParameter import VerilogParameter
 from VerilogCodeGen_Helper import *
@@ -355,4 +355,77 @@ class VerilogModule():
             return None
 
         
+    @classmethod
+    def generate_instantiationFromSearch(cls, moduleName, configObj, fileDescriptor=None, indentObj=None ):
+        """searches the configObj's searchPaths for an instantiation matching moduleName, queries if multiple module files were found and afterwords either writes an instantiation to file_out or, if empty, simply prints it to be redirected e.g. via the text editor
 
+        :moduleName: name of the module (may optionally contain ".v/.sv" ending)
+        :configObj: Verilog_codeGen_config whose searchPaths is used
+        :indentObj: IndentObj which overrides configObj.tabwidth
+        """
+        if not indentObj:
+            indentObj = IndentObj(tabwidth = configObj.tabwidth if configObj.tabwidth else 4)
+
+        # determine module to be instantiated
+        l_foundModules = cls.__find_moduleFiles(moduleName, configObj)
+
+        if not l_foundModules:
+            print("No modules found for module name '" + moduleName + "'!")
+        elif len(l_foundModules) == 1:
+            s_selectedModule = l_foundModules[0]
+        else:
+            print("Multiple module were found:")
+            count = 0
+            for moduleFile in l_foundModules:
+                print( str(count) + ") " + moduleFile )
+                count += 1
+                
+            i_selectedModule = input("Please enter the number of the desired module (any other character to abort):")
+            
+            try:
+                if int(i_selectedModule) in range(len(l_foundModules)):
+                    # valid module selection
+                    s_selectedModule = l_foundModules[int(i_selectedModule)]
+                else:
+                    return None
+            except Exception:
+                return None
+
+        # generate module object from s_selectedModule 
+        selectedModule = cls.scan( s_selectedModule )
+
+        # write instantiation to file_out or print it
+        if fileDescriptor:
+            if isinstance(fileDescriptor, str):
+                file_out = open(fileDescriptor, "w")
+            else:
+                file_out = fileDescriptor
+        else:
+            file_out = sys.stdout
+
+        selectedModule.write_instantiation( file_out, indentObj )
+            
+
+    @classmethod
+    def __find_moduleFiles(cls, moduleName, configObj):
+        """recursively searches the moduleName in configObj.searchPaths
+
+        :moduleName: name of the module (may optionally contain ".v/.sv" ending)
+        :configObj: Verilog_codeGen_config whose searchPaths is used
+        :returns: list of found matches
+        """
+        # determine string to be searched dependant on file ending if given
+        if re.search(r"(\.v|\.sv)\s*$", moduleName):
+            re_searchModule = r"^" + moduleName
+        else:
+            re_searchModule = r"^" + moduleName + r"(\.v|\.sv)\s*$"
+
+        # iterate through searchPaths and find re_searchModule recursively
+        l_foundModules = []
+        for searchPath in configObj.searchPaths:
+            for (path, directories, filenames) in os.walk(searchPath):
+                # covering the unusual case that a module exists in both Verilog and SystemVerilog
+                l_foundModules.extend(
+                        [ path + "/" + filename for filename in filenames if re.search(re_searchModule, filename) ] )
+        
+        return l_foundModules

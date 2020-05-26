@@ -67,6 +67,7 @@ from VerilogModule import VerilogModule
 from VerilogFile import VerilogFile
 from VerilogPort import VerilogPort
 from VerilogParameter import VerilogParameter
+from Verilog_codeGen_config import Verilog_codeGen_config
 from VerilogCodeGen_Helper import *
 
 
@@ -75,6 +76,13 @@ from VerilogCodeGen_Helper import *
 ######################
 
 if __name__ == '__main__':
+
+    ##########################
+    #### load config file ####
+    ##########################
+
+    config = Verilog_codeGen_config.load()
+    l_searchPaths = config.searchPaths if config.searchPaths else []
 
     ####################################
     #### parse command line options ####
@@ -116,10 +124,10 @@ if __name__ == '__main__':
             action="store_true",
             dest="b_createTestbench",
             help="scans the specified input file and generates a suitable testbench")
-#     parser.add_option("--module-instantiation","--mod-inst","--modInst",
-#             action="store_true",
-#             dest="b_moduleInstantiation",
-#             help="searches the specified module and prints an instantiation")
+    parser.add_option("--module-instantiation","--mod-inst","--modInst",
+            action="store_true",
+            dest="b_moduleInstantiation",
+            help="searches the specified module and prints an instantiation")
     parser.add_option("-a","--author",
             dest="author",
             help="specify author (pass as string)",
@@ -156,10 +164,21 @@ if __name__ == '__main__':
             s_moduleName = args[0] 
 
     # determine tabwidth
-    indentObj = IndentObj( tabwidth=int(options.tabwidth) if options.tabwidth else 4, desiredIndentation=24 )
+    if options.tabwidth:
+        tabwidth = int(options.tabwidth)
+    elif config.tabwidth:
+        tabwidth = config.tabwidth
+    else: 
+        tabwidth = 4
+    indentObj = IndentObj( tabwidth, desiredIndentation=24 )
 
     # determine string for author name
-    s_author = options.author if options.author else ""
+    if options.author:
+        s_author = options.author
+    elif config.author:
+        s_author = config.author
+    else: 
+        s_author = ""
 
     # determine timescale string
     s_timescale = options.timescale if options.timescale else ""
@@ -187,7 +206,6 @@ if __name__ == '__main__':
                             indentObj=indentObj,
                             language=language )
 
-        print(verilogFile)
         print("generating module file...")
         verilogFile.write_moduleFile()
 
@@ -212,8 +230,9 @@ if __name__ == '__main__':
     ##############################
     #### module instantiation ####
     ##############################
-#     if options.b_moduleInstantiation:
-#         # TODO
-#         pass
+    if options.b_moduleInstantiation:
+        verilogModule = VerilogModule.generate_instantiationFromSearch( s_moduleName, config, indentObj=indentObj )
+    
 
-    print("code generation done")
+    if not options.b_moduleInstantiation:
+        print("code generation done")

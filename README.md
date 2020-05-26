@@ -75,6 +75,9 @@ display help messages
 ##### SystemVerilog multi-dimensional (packed and unpacked) arrays  
 So far, the tool only supports one-dimensional (packed) arrays. This needs to be adapted to the extended capabilities of SystemVerilog in an update.
 
+##### commentary elimination
+Comments in the module declaration containing tokens like '(',')' or ';' may cause file scanning to not work correctly. My plan is to integrate a preprocessor to eliminate all commentaries from a file in temporary file when scanning a file.
+
 ##### module instantiation, configuration  
 As stated above, I'm working on also providing a command to print an instantiation for a specified module which then needs to be redirected to the opened file in your text editor of choice. I would like it to contain an option to try to automatically insert an include statement, but I'm not sure about how complex this is to implement in a way which can be used independently from the chosen text editor.
 I think that it would be nice to have the possibility to also instantiate modules which are not in your current working directory (or a subdirectory) with the same command. Therefore, I'm planning to integrate a configuration file where you can specify search paths for module definition files used by this command. 

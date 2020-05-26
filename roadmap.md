@@ -7,9 +7,8 @@
 
 #### file 'verilog_codeGenerator'
 * [x] parse input arguments
-* [x] decide action (module generation, additional testbench generation, module to testbench, module instantiation (TODO) )
+* [x] decide action (module generation, additional testbench generation, module to testbench, module instantiation)
 * [x] invoke action  
-TODO: implement module instantiation
 
 ---
 
@@ -18,12 +17,14 @@ class to hold a configuration containing:
 * search paths for module instantiation
 * author  
 ###### methods
-* [ ] readConfig(cls, file_in)  
-  reads a config file (no idea of which format yet) and returns a Verilog_codeGen_config object in case of successful reading
-* [ ] findModule(self, moduleName)  
-  find the specified module in the search paths (recursively), order:  1) current working directory, 2) search paths
-if multiple modules found, prompt which one should be instantiated  
-(TODO: maybe this method fits better in an own class or somewhere else, we will see. But this way it has direct access to the search path variable)
+* [x] init(self, searchPaths, author, tabwidth, configFile)
+* [x] from_Config(cls)  
+  reads a json config file and returns a Verilog_codeGen_config object in case of successful reading  
+config file is obtained from \_\_findConfig()
+* [ ] write_template(cls, path="")  
+writes a config template to be edited by user to path (or to top level or src directory if path is empty)
+* [x] write_config(self)
+writes the config object out to the json file specified in self.\_\_configFile (may not be needed as the file is intended to be edited by user, but useful for testing and maybe for writing an empty config file as template)
 
 ---
 
@@ -37,7 +38,7 @@ used to hold a VerilogModule plus the additional information which doesn't funct
 * indentObj
 * includeGuards
 * language
-###### functions
+###### methods
 * [x] write_moduleFile (file_out)
 * [x] write_testbenchFile (file_out)
 * [x] scan (file_in)  
@@ -47,13 +48,12 @@ scan input file for language and maybe author, pass to VerilogModule.scan
 
 #### class 'VerilogModule'  
 hold relevant parameters of a verilog module  
-TODO: move s_timescale to VerilogFile
 ###### attributes
 * moduleName  
 * list_ports
 * list_parameters
 * outputReg (boolean value)
-###### functions
+###### methods
 * [x] init(...)  
 init by passing properties directly (intended to be used by module generator)
 * [x] scan(file_in)  
@@ -63,6 +63,10 @@ TODO: is not able to handle Verilog 1995 style parameter declarations (declarati
 writes the whole module code body (functional part)
 * [x] write_instantiation(file_out, indentObj)  
 generates a module instantiation (connected variable names equal to internal port names)
+* [x] findModuleFile(cls, moduleName, config)  
+  find the specified module in the config's search paths (recursively), order:  1) current working directory, 2) search paths
+if multiple modules found, prompt which one should be instantiated  
+
 ---
 
 #### class 'VerilogPort'  
@@ -71,7 +75,7 @@ full port description
 * identifier
 * portType (input, output, inout)
 * width (ideally directly as string to handle different formats)
-###### functions
+###### methods
 * [x] scan(s_lineIn)  
 	scans a line of code and attempts to extract a port from it  
 	TODO: does only work with one-dimensional (packed) ports
@@ -88,7 +92,7 @@ full parameter description
 ###### attributes  
 * identifier
 * default value
-###### functions
+###### methods
 * [x] scan(s_lineIn)  
 	scans a line of code and attempts to extract parameters port from it
 * [x] write_declaration(file_out, indentObj, language)  
