@@ -10,6 +10,14 @@
 #       * optional additional generation of a suitable testbench file
 #   * testbench generation for an existing Verilog/SystemVerilog file
 #   * prints a module instantiation scanned from an existing module file (to be used while coding, e.g. as a terminal command from within vim)
+#   
+#   It is possible to set up a json configuration file named 'config.json' either in $HOME/.config/verilog_codeGen or in the top level of this repo (-> this file's directory). 
+#   The configuration file may contain:
+#       - searchPaths: list of paths where the specified module is searched in module instantiation (besides the working directory which is always used for the search)
+#       - author: author to be used in each file generating mode
+#       - tabwidth: set to your desired tabwidth, used in each writing operation
+#   Every option (except from searchPaths) is overwritten if a command line parameter is given for this option
+#
 #
 #   ###############
 #   #### usage ####
@@ -19,18 +27,20 @@
 #   verilog_codeGen [-i <input ports> -o <output ports> --output-reg -p <parameters> --timescale <timescale> --sv/systemverilog/SystemVerilog --include-guards --add-testbench/add-tb -a/--author <author> --tabwidth <tabwidth>] <module/file name> 
 # 
 #   * testbench generation
-#   verilog_codeGen --testbench/tb <module/file name>
+#       verilog_codeGen --testbench/tb <module/file name>
 #
 #   * module instantiation
-#   verilog_codeGen --module-instantiation/mod-inst/modInst <module/file name>
+#       verilog_codeGen --module-instantiation/mod-inst/modInst <module/file name>
 #   
-#   the different options may overlap, but I don't see any sense in invoking multiple of the three options at a time
+#   the different options may overlap, but in most cases invoking multiple different operations (besides the --add-testbench option) does not make much sense does not make much sense to me
 #
 #   #######################
 #   #### configuration ####
 #   #######################
 #
-#   TODO
+#   * write a template configuration to just fill in your preferences
+#       verilog_codeGen --config-template [target directory]
+#           (target directory is optional, if not used, empty config is written to $HOME/.config/verilog_codeGen or to this repo's top level directory
 #
 #   #################
 #   #### example ####
@@ -57,12 +67,18 @@
 #       
 #
 
+# add src path to python's module search path 
+def add_srcPath():
+    s_thisPath = os.path.realpath(__file__)
+    l_srcPath = s_thisPath.split("/")[:-1] + ["src"]
+    sys.path.append( "/".join(l_srcPath) )
+    
 
-from sys import exit
+import sys, os, re
 from optparse import OptionParser
 from time import localtime, strftime
 from pathlib import Path
-import re
+add_srcPath()
 from VerilogModule import VerilogModule
 from VerilogFile import VerilogFile
 from VerilogPort import VerilogPort
@@ -76,13 +92,6 @@ from VerilogCodeGen_Helper import *
 ######################
 
 if __name__ == '__main__':
-
-    ##########################
-    #### load config file ####
-    ##########################
-
-    config = Verilog_codeGen_config.load()
-    l_searchPaths = config.searchPaths if config.searchPaths else []
 
     ####################################
     #### parse command line options ####
@@ -128,6 +137,10 @@ if __name__ == '__main__':
             action="store_true",
             dest="b_moduleInstantiation",
             help="searches the specified module and prints an instantiation")
+    parser.add_option("--config-template",
+            action="store_true",
+            dest="b_configTemplate",
+            help="writes an empty config to the directory passed as argument, to $HOME/.config/verilog_codeGen if $HOME/.config exists or to the top level of this project otherwise")
     parser.add_option("-a","--author",
             dest="author",
             help="specify author (pass as string)",
@@ -139,6 +152,7 @@ if __name__ == '__main__':
 
 
     #### parse options ####
+    # (everything that may also be set in configuration file is evaluated after loading config file)
 
     # call parser
     (options, args) = parser.parse_args()
@@ -163,6 +177,19 @@ if __name__ == '__main__':
             s_fileName = args[0] + "." + language.get_fileEnding()
             s_moduleName = args[0] 
 
+    # determine timescale string
+    s_timescale = options.timescale if options.timescale else ""
+
+
+    ##########################
+    #### load config file ####
+    ##########################
+
+    config = Verilog_codeGen_config.load()
+    l_searchPaths = config.searchPaths if config.searchPaths else []
+    if not options.b_moduleInstantiation: print("Configuration loaded from " + config.get_configFile() )
+
+
     # determine tabwidth
     if options.tabwidth:
         tabwidth = int(options.tabwidth)
@@ -171,7 +198,7 @@ if __name__ == '__main__':
     else: 
         tabwidth = 4
     indentObj = IndentObj( tabwidth, desiredIndentation=24 )
-
+    
     # determine string for author name
     if options.author:
         s_author = options.author
@@ -180,8 +207,13 @@ if __name__ == '__main__':
     else: 
         s_author = ""
 
-    # determine timescale string
-    s_timescale = options.timescale if options.timescale else ""
+
+    ###########################
+    #### write config file ####
+    ###########################
+
+    if options.b_configTemplate:
+        Verilog_codeGen_config.write_template(args[0] if args[0] else None)
 
     ###########################
     #### module generation ####

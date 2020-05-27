@@ -408,7 +408,7 @@ class VerilogModule():
 
     @classmethod
     def __find_moduleFiles(cls, moduleName, configObj):
-        """recursively searches the moduleName in configObj.searchPaths
+        """recursively searches the moduleName in current working directory and in configObj.searchPaths
 
         :moduleName: name of the module (may optionally contain ".v/.sv" ending)
         :configObj: Verilog_codeGen_config whose searchPaths is used
@@ -420,8 +420,15 @@ class VerilogModule():
         else:
             re_searchModule = r"^" + moduleName + r"(\.v|\.sv)\s*$"
 
-        # iterate through searchPaths and find re_searchModule recursively
         l_foundModules = []
+
+        # iterate through current working directory to find modules
+        for (path, directories, filenames) in os.walk( os.getcwd() ):
+            # covering the unusual case that a module exists in both Verilog and SystemVerilog
+            l_foundModules.extend(
+                    [ path + "/" + filename for filename in filenames if re.search(re_searchModule, filename) ] )
+
+        # iterate through searchPaths and find re_searchModule recursively
         for searchPath in configObj.searchPaths:
             for (path, directories, filenames) in os.walk(searchPath):
                 # covering the unusual case that a module exists in both Verilog and SystemVerilog

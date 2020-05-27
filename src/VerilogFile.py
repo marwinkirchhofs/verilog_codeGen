@@ -245,14 +245,14 @@ class VerilogFile():
                 file_out.write(";\n")
             if d_ports["input"]: writeBlankLines(file_out, 1)
             # output ports
-            file_out.write("\t// dut output\n" if d_ports["output"] else "")
+            file_out.write("\t// dut outputs\n" if d_ports["output"] else "")
             for port in d_ports["output"]:
                 file_out.write("\t")
                 port.write_connectedVariable(file_out, self.indentObj, self.language, b_removeIOSuffix=b_removeIOSuffix)
                 file_out.write(";\n")
             if d_ports["output"]: writeBlankLines(file_out, 1)
             # inout ports
-            file_out.write("\t// dut inout\n" if d_ports["inout"] else "")
+            file_out.write("\t// dut inouts\n" if d_ports["inout"] else "")
             for port in d_ports["inout"]:
                 file_out.write("\t")
                 port.write_connectedVariable(file_out, self.indentObj, self.language, b_removeIOSuffix=b_removeIOSuffix)

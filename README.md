@@ -1,14 +1,18 @@
-# Verilog code generator
+# Verilog/SystemVerilog code generator
 This tool generates different code blocks/files for Verilog/SystemVerilog modules.  
 Features are:  
-* ##### module file generation based on command line arguments  
-You can specify characteristics like input/output ports and parameters directly as command line arguments. The tool also generates a leading commentary section with templates for each specified property. For more precise information refer to the usage section.  
-	* optional additional generation of a suitable testbench file  
+* ##### module file generation based on command line arguments (with optional additional testbench generation)
+	You can specify characteristics like input/output ports and parameters directly as command line arguments. The tool also generates a leading commentary section with templates for each specified property. For more precise information refer to the usage section.   
 * ##### testbench generation for an existing Verilog/SystemVerilog file  
-This scans an existing Verilog/SystemVerilog file for a module declaration and generates a matching testbench. The language is derived from the found module or the file extension of the command line argument. (Please note that explicitly specifying a non-matching language via e.g. --sv is invalid. If you encounter a case where generating for example a SystemVerilog testbench for a Verilog file is needed, feel free to report it to me ;-) )  
-* (planned: generation of a module instantiation for a given input file with the definition of the instantiated module not necessarily in the current working directory)  
+	This scans an existing Verilog/SystemVerilog file for a module declaration and generates a matching testbench. The language is derived from the found module or the file extension of the command line argument. (Please note that explicitly specifying a non-matching language via e.g. --sv is invalid. If you run into a case where generating for example a SystemVerilog testbench for a Verilog file is needed, feel free to give me a feedback)  
+* ##### generation of a module instantiation from a searched file
+	_! Note that this feature is in a beta/test state !_  
+I think that it would be really helpful to have the possibility of getting a module instantiation generated from within the text editor you're currently writing in. As at least in my workflow often used module often do not reside in the directory/project I'm currently working on, I wanted to make it possible to also instantiate those modules without much overhead.  
+Therefore, it is possible to set up `searchPaths` in a configuration file which are then recursively scanned for the specified module/file. Additionally, the current working directory always also get's scanned. It is possible to pass a module name with or without file name. In the latter case, both Verilog and SystemVerilog files are searched.  
+Issue: My intention is to redirect the command's output via the text editor (e.g. `:read` in vim). This currently only works properly if just one matching file is found. In the current state, in the case of multiple matches, the tool prompts which module you want to get instantiated. I assume this not to be visible as an editor reading from a terminal command waits for the command to terminate until it shows the output (at least, vim does).  
+I currently do not know what the best solution to this would be, but I still wanted to provide the functionality with this disclaimer. If you have an idea on that or a feedback for me how it would suit your workflow, I'm really looking forward to getting your input!
 
-If you encounter any errors or have suggestions, please feel free to contact me. (I myself do not have years of Verilog experience. It just felt like a good idea to write a small empty-module-generation tool during some private projects which ended up escalating a bit ;-) ) 
+If you encounter any errors, miss features or have other suggestions, please don't hesitate to contact me. (I myself do not have years of Verilog experience. It just felt like a good idea to write a small empty-module-generation tool during some private projects which ended up escalating a bit and slightly influencing my exam period ;-) ) 
 
 
 ## Usage
@@ -38,6 +42,13 @@ Each usage works with either a module or a file name as argument.
   	* testbench generation: `--testbench`/`--tb`  
   	causes `module_name`/`file_name` to be scanned (if it is in current directory) and invokes the generation of a suitable testbench file
 
+* ##### module instantiation from file search
+  	* module search mode: `--module-instantiation`/`--mod-inst`/`--modInst`  
+
+* ##### configuration
+  	* write empty configuration file: `--config-template`  
+  	  	In this case, target directory is passed as argument (optionally) rather than modulename/filename. It is therefore not usable at the same time with other actions.
+
 * ##### general options
 	* author: `-a "author"`/`--author "author"`   
 	`author` gets automatically inserted in the leading commentary
@@ -55,20 +66,15 @@ display help messages
 
 * ##### module generation  
 	* uart receiver in verilog:  
-`verilog_codeGen -i clk,rst_n,uart_i -o symbol_o#MSG_BITS,newSymbol_o --output-reg -p CLK_FREQ,BAUD_RATE,MSG_BITS --include-guards --author="John Doe" uartRx`
+`verilog_codeGen -i clk,rst_n,uart_i -o symbol_o#MSG_BITS,newSymbol_o --output-reg -p CLK_FREQ,BAUD_RATE=9600,MSG_BITS --include-guards --author="John Doe" uartRx`
 
 	* respective wrapper in systemverilog by other user:  
 `verilog_codeGen -i clk,rst_n,uart_rxd_out -o symbol_o#8,newSymbol_o --timescale 1ns/1ps -a "N. Otjohndoe" --tabwidth=8 --sv wrapper_uartRx`  
 
-	resulting files:  
-	uartRx.v  
-	wrapper_uartRx.sv
-
 * ##### testbench generation:  
-`verilog_codeGen --tb --tabwidth=8 -a "Mr. TB" --timescale "1ns/1ps" wrapper_uartRx.sv`
+	`verilog_codeGen --tb --tabwidth=8 -a "Mr. TB" --timescale "1ns/1ps" wrapper_uartRx.sv`
 
-	resulting file:  
-	tb_wrapper_uartRx.sv
+The resulting files can be found in the `Examples` directory to give you an impression.
 
 
 ## Future work
@@ -78,7 +84,3 @@ So far, the tool only supports one-dimensional (packed) arrays. This needs to be
 ##### commentary elimination
 Comments in the module declaration containing tokens like '(',')' or ';' may cause file scanning to not work correctly. My plan is to integrate a preprocessor to eliminate all commentaries from a file in temporary file when scanning a file.
 
-##### module instantiation, configuration  
-As stated above, I'm working on also providing a command to print an instantiation for a specified module which then needs to be redirected to the opened file in your text editor of choice. I would like it to contain an option to try to automatically insert an include statement, but I'm not sure about how complex this is to implement in a way which can be used independently from the chosen text editor.
-I think that it would be nice to have the possibility to also instantiate modules which are not in your current working directory (or a subdirectory) with the same command. Therefore, I'm planning to integrate a configuration file where you can specify search paths for module definition files used by this command. 
-And if it's already there, why not allowing to set an author and maybe a tabwidth in the configuration file so that these automatically get used at each invocation if not manually overwritten.

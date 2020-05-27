@@ -23,6 +23,10 @@ class Verilog_codeGen_config(JSONEncoder):
         self.tabwidth = tabwidth
 
 
+    def get_configFile(self):
+        return self.__configFile
+
+
     def __str__(self):
         return "".join( ["configuration file: ", str(self.__configFile), "\n",
                         "search paths: ", str(self.searchPaths), "\n",
@@ -53,6 +57,23 @@ class Verilog_codeGen_config(JSONEncoder):
 
 
     @classmethod
+    def write_template(cls, dir_out):
+        """writes an empty configuration file to dir_out, if given, otherwise to $HOME/.config/verilog_codeGen if $HOME/.config exists (->UNIX-system), otherwise just to the top level of this project
+        """
+        # determine output path
+        if not dir_out:
+            s_unixConfigPath = os.getenv("HOME") + "/.config"
+            if os.path.isdir(s_unixConfigPath):
+                dir_out = s_unixConfigPath + "/verilog_codeGen"
+            else:
+                dir_out = "/".join( os.path.abspath(__file__).split("/")[:-1] )
+        
+        # create empty config object
+        emptyConfig = cls( dir_out + "/config.json", searchPaths=["",""], author="", tabwidth=4 )
+        emptyConfig.write_config()
+
+    
+    @classmethod
     def load(cls):
         """create a Verilog_codeGen_config object from a config file found by cls.find_config
         :returns: Verilog_codeGen_config object
@@ -66,7 +87,6 @@ class Verilog_codeGen_config(JSONEncoder):
                     searchPaths = jsonObj["searchPaths"] if jsonObj["searchPaths"] else []
                     author = jsonObj["author"] if jsonObj["author"] else ""
                     tabwidth = int(jsonObj["tabwidth"]) if jsonObj["tabwidth"] else 0
-                    print("Configuration loaded from " + s_configFile)
                     return cls(s_configFile, searchPaths, author, tabwidth)
             except Exception as e:
                 print("Error while reading configuration from " + s_configFile + "!")

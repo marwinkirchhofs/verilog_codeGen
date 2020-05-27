@@ -1,7 +1,9 @@
 # Roadmap Verilog module generator (testbench extension)
 
 #### general TODOs
-* [ ] make it possible for each command to pass either a module or a file name as argument (don't ask me which classes are affected by this)
+* [ ] add support for SystemVerilog multi-dimensional and packed/unpacked arrays
+* [ ] allow directories to be explicitly ignored in searchPaths by setting a leading '!' in the searchPaths element (similar to .gitignore file)
+* [ ] include a preprocessor removing comments
  
 ---
 
@@ -21,7 +23,7 @@ class to hold a configuration containing:
 * [x] from_Config(cls)  
   reads a json config file and returns a Verilog_codeGen_config object in case of successful reading  
 config file is obtained from \_\_findConfig()
-* [ ] write_template(cls, path="")  
+* [ ] write_template(cls, path="")  (TODO)
 writes a config template to be edited by user to path (or to top level or src directory if path is empty)
 * [x] write_config(self)
 writes the config object out to the json file specified in self.\_\_configFile (may not be needed as the file is intended to be edited by user, but useful for testing and maybe for writing an empty config file as template)
