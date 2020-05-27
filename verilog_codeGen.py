@@ -204,9 +204,11 @@ if __name__ == '__main__':
     ##########################
 
     config = Verilog_codeGen_config.load()
-    l_searchPaths = config.searchPaths if config.searchPaths else []
-    if not options.b_moduleInstantiation: print("Configuration loaded from " + config.get_configFile() )
+    if not config:
+        config = Verilog_codeGen_config( configFile="" )
 
+    l_searchPaths = config.searchPaths if config.searchPaths else []
+    if config.get_configFile() and not options.b_moduleInstantiation: print("Configuration loaded from " + config.get_configFile() )
 
     # determine tabwidth
     if options.tabwidth:

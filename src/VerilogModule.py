@@ -371,6 +371,7 @@ class VerilogModule():
 
         if not l_foundModules:
             print("No modules found for module name '" + moduleName + "'!")
+            return None
         elif len(l_foundModules) == 1:
             s_selectedModule = l_foundModules[0]
         else:
