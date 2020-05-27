@@ -1,6 +1,7 @@
 # Verilog/SystemVerilog code generator
 This tool generates different code blocks/files for Verilog/SystemVerilog modules.  
-Features are:  
+
+The tool features:
 * ##### module file generation based on command line arguments (with optional additional testbench generation)
 	You can specify characteristics like input/output ports and parameters directly as command line arguments. The tool also generates a leading commentary section with templates for each specified property. For more precise information refer to the usage section.   
 * ##### testbench generation for an existing Verilog/SystemVerilog file  
