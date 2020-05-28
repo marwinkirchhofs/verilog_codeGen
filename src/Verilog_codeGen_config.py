@@ -50,7 +50,7 @@ class Verilog_codeGen_config(JSONEncoder):
 
         #### write config file ####
         if isinstance(self.__configFile, str):
-            with open(self.__configFile) as file_out:
+            with open(self.__configFile, "w") as file_out:
                 json.dump( obj=self, fp=file_out, cls=self.__Verilog_codeGen_config_jsonEncoder, indent=4)                        
         else:
             json.dump( obj=self, fp=self.__configFile, cls=self.__Verilog_codeGen_config_jsonEncoder, indent=4)                        
@@ -65,12 +65,18 @@ class Verilog_codeGen_config(JSONEncoder):
             s_unixConfigPath = os.getenv("HOME") + "/.config"
             if os.path.isdir(s_unixConfigPath):
                 dir_out = s_unixConfigPath + "/verilog_codeGen"
+                # create dir_out if it does not exist
+                try:
+                    os.mkdir( dir_out )
+                except:
+                    pass
             else:
-                dir_out = "/".join( os.path.abspath(__file__).split("/")[:-1] )
+                dir_out = "/".join( os.path.abspath(__file__).split("/")[:-2] )
         
         # create empty config object
         emptyConfig = cls( dir_out + "/config.json", searchPaths=["",""], author="", tabwidth=4 )
         emptyConfig.write_config()
+        print("Empty configuration file has been written to: " + dir_out + "/config.json")
 
     
     @classmethod

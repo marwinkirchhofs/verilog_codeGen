@@ -48,7 +48,7 @@ Each usage works with either a module or a file name as argument.
 
 * ##### configuration
   	* write empty configuration file: `--config-template`  
-  	  	In this case, target directory is passed as argument (optionally) rather than modulename/filename. It is therefore not usable at the same time with other actions.
+  	  	In this case, the (optional) argument is taken as target directory rather than as modulename/filename. 
 
 * ##### general options
 	* author: `-a "author"`/`--author "author"`   
@@ -57,8 +57,9 @@ Each usage works with either a module or a file name as argument.
 	set a timescale for the generated module
 	* tabwidth: `--tabwidth tabwidth`  
 	`tabwidth` is used to set up proper indentations and alignments for things like port width specifications and identifiers in the code. This option aims to get the generated source code compliant to your editing preferations. Default value is 4. (I apologize if you prefer indenting with spaces rather than tab characters, maybe a great topic for your contribution...)
-* ##### help: `-h`/`--help`  
-display help messages
+* ##### help: 
+  	* display help messages: `-h`/`--help`  
+	
 
 
 ## Examples

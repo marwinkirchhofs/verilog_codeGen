@@ -49,8 +49,11 @@
 #
 #   * module instantiation
 #       verilog_codeGen --module-instantiation/mod-inst/modInst <module/file name>
+#
+#   * config template generation
+#       verilog_codeGen --config-template [output dir]
 #   
-#   the different options may overlap, but in most cases invoking multiple different operations (besides the --add-testbench option) does not make much sense does not make much sense to me
+#   It is only possible to perform one of the three actions at a time
 #
 #   #######################
 #   #### configuration ####
@@ -175,25 +178,26 @@ if __name__ == '__main__':
     # call parser
     (options, args) = parser.parse_args()
 
-    # check for module name
-    if len(args) != 1 :
-        print( "Please specify a module/file name!" )
-        exit(1)
-    else:
-        re_validFileEnding = r"(\.v|\.sv)\s*$"
-       
-        # determine language
-        if options.systemverilog or re.search(r"\.sv", args[0]) or Path(args[0] + ".sv").is_file():
-            language = HDL_Enum.SYSTEMVERILOG
+    # check for module name (if not config template generation is called)
+    if not options.b_configTemplate:
+        if len(args) != 1 :
+            print( "Please specify a module/file name!" )
+            exit(1)
         else:
-            language = HDL_Enum.VERILOG
+            re_validFileEnding = r"(\.v|\.sv)\s*$"
+           
+            # determine language
+            if options.systemverilog or re.search(r"\.sv", args[0]) or Path(args[0] + ".sv").is_file():
+                language = HDL_Enum.SYSTEMVERILOG
+            else:
+                language = HDL_Enum.VERILOG
 
-        if re.search(re_validFileEnding, args[0]):
-            s_fileName = args[0]
-            s_moduleName = re.sub(re_validFileEnding, "", args[0])
-        else:
-            s_fileName = args[0] + "." + language.get_fileEnding()
-            s_moduleName = args[0] 
+            if re.search(re_validFileEnding, args[0]):
+                s_fileName = args[0]
+                s_moduleName = re.sub(re_validFileEnding, "", args[0])
+            else:
+                s_fileName = args[0] + "." + language.get_fileEnding()
+                s_moduleName = args[0] 
 
     # determine timescale string
     s_timescale = options.timescale if options.timescale else ""
@@ -228,18 +232,27 @@ if __name__ == '__main__':
         s_author = ""
 
 
+    #############################################################
+    #                                                           #
+    #           PERFORM CHOSEN ACTION                           #
+    #                                                           #
+    #############################################################
+
+
     ###########################
     #### write config file ####
     ###########################
 
     if options.b_configTemplate:
-        Verilog_codeGen_config.write_template(args[0] if args[0] else None)
+        Verilog_codeGen_config.write_template(args[0] if args else None)
+        print("code generation done")
+
 
     ###########################
     #### module generation ####
     ###########################
 
-    if options.inputs or options.outputs or options.parameters:
+    elif options.inputs or options.outputs or options.parameters:
         # setup port/parameter lists
         ports = []
         for portDescription in options.inputs.split(',') if options.inputs else []:
@@ -266,25 +279,28 @@ if __name__ == '__main__':
             print("adding a testbench...")
             verilogFile.write_testbenchFile()
 
+        print("code generation done")
+
 
     ##############################
     #### testbench generation ####
     ##############################
-    if options.b_createTestbench:
+    elif options.b_createTestbench:
         verilogFile = VerilogFile.scan( s_fileName )
         verilogFile.indentObj = indentObj
         verilogFile.s_author = s_author
         verilogFile.s_timescale = s_timescale
         print("writing testbench file...")
         verilogFile.write_testbenchFile()
+        print("code generation done")
 
     
     ##############################
     #### module instantiation ####
     ##############################
-    if options.b_moduleInstantiation:
+    elif options.b_moduleInstantiation:
         verilogModule = VerilogModule.generate_instantiationFromSearch( s_moduleName, config, indentObj=indentObj )
     
+    else:
+        print("No action specified, nothing to be done")
 
-    if not options.b_moduleInstantiation:
-        print("code generation done")
