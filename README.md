@@ -9,7 +9,7 @@ The tool features:
 * ##### generation of a module instantiation from a searched file
 	_! Note that this feature is in a beta/test state !_  
 I think that it would be really helpful to have the possibility of getting a module instantiation generated from within the text editor you're currently writing in. As at least in my workflow often used module often do not reside in the directory/project I'm currently working on, I wanted to make it possible to also instantiate those modules without much overhead.  
-Therefore, it is possible to set up `searchPaths` in a configuration file which are then recursively scanned for the specified module/file. Additionally, the current working directory always also get's scanned. It is possible to pass a module name with or without file name. In the latter case, both Verilog and SystemVerilog files are searched.  
+Therefore, it is possible to set up `searchPaths` in a configuration file which are then recursively scanned for the specified module/file. Additionally, the current working directory always also get's scanned. You may pass a module name with or without file ending. In the latter case, both Verilog and SystemVerilog files are searched.  
 Issue: My intention is to redirect the command's output via the text editor (e.g. `:read` in vim). This currently only works properly if just one matching file is found. In the current state, in the case of multiple matches, the tool prompts which module you want to get instantiated. I assume this not to be visible as an editor reading from a terminal command waits for the command to terminate until it shows the output (at least, vim does).  
 I currently do not know what the best solution to this would be, but I still wanted to provide the functionality with this disclaimer. If you have an idea on that or a feedback for me how it would suit your workflow, I'm really looking forward to getting your input!
 
@@ -60,6 +60,16 @@ Each usage works with either a module or a file name as argument.
 * ##### help: 
   	* display help messages: `-h`/`--help`  
 	
+
+## Configuration
+It is possible to set up a json configuration file named `config.json` either in `$HOME/.config/verilog_codeGen` or in the top level of this repo. 
+The configuration file may contain:
+* `searchPaths`: list of paths where the specified module is searched in module instantiation (besides the working directory which is always used for the search)
+* `author`: author to be inserted in the leading comment in each file generating mode
+* `tabwidth`: set to your desired tabwidth, used in each writing operation  
+
+An empty configuration template can be generated with the `--config-template` option. You may pass the desired output directory as argument, otherwise the file gets created in `$HOME/.confing/verilog_codeGen` or in the repository's top level directory.  
+`author` and `tabwidth` can be temporarily overwritten by specifying the respective command line parameter.
 
 
 ## Examples
