@@ -16,10 +16,22 @@ I currently do not know what the best solution to this would be, but I still wan
 If you encounter any errors, miss features or have other suggestions, please don't hesitate to contact me. (I myself do not have years of Verilog experience. It just felt like a good idea to write a small empty-module-generation tool during some private projects which ended up escalating a bit and slightly influencing my exam period ;-) ) 
 
 
+## Configuration
+It is possible to set up a json configuration file named `config.json` either in `$HOME/.config/verilog_codeGen` or in the top level of this repo. 
+The configuration file may contain:
+* `searchPaths`: list of paths where the specified module is searched in module instantiation (besides the working directory which is always used for the search)
+* `author`: author to be inserted in the leading commentary in each file generating mode
+* `tabwidth`: set to your desired tabwidth, used in each writing operation  
+
+An empty configuration template can be generated with the `--config-template` option. You may pass the desired output directory as argument, otherwise the file gets created in `$HOME/.confing/verilog_codeGen` or in the repository's top level directory.  
+`author` and `tabwidth` can be temporarily overwritten by specifying the respective command line parameter.
+
+
 ## Usage
 `verilog_codeGen [options] <module_name/file_name>`  
-(assuming you symlinked `src/verilog_codeGen.py` to `verilog_codeGen` somewhere in your `$PATH`)  
-Each usage works with either a module or a file name as argument.
+( `verilog_codeGen [options] [output directory]` for configuration template generation )  
+(assuming you symlinked `verilog_codeGen.py` to `verilog_codeGen` somewhere in your `$PATH`)  
+Each usage (apart from configuration template generation) works with either a module or a file name as argument.
 
 ##### options
 * ##### file generation from command line arguments
@@ -46,7 +58,7 @@ Each usage works with either a module or a file name as argument.
 * ##### module instantiation from file search
   	* module search mode: `--module-instantiation`/`--mod-inst`/`--modInst`  
 
-* ##### configuration
+* ##### configuration template generation
   	* write empty configuration file: `--config-template`  
   	  	In this case, the (optional) argument is taken as target directory rather than as modulename/filename. 
 
@@ -60,17 +72,6 @@ Each usage works with either a module or a file name as argument.
 * ##### help: 
   	* display help messages: `-h`/`--help`  
 	
-
-## Configuration
-It is possible to set up a json configuration file named `config.json` either in `$HOME/.config/verilog_codeGen` or in the top level of this repo. 
-The configuration file may contain:
-* `searchPaths`: list of paths where the specified module is searched in module instantiation (besides the working directory which is always used for the search)
-* `author`: author to be inserted in the leading comment in each file generating mode
-* `tabwidth`: set to your desired tabwidth, used in each writing operation  
-
-An empty configuration template can be generated with the `--config-template` option. You may pass the desired output directory as argument, otherwise the file gets created in `$HOME/.confing/verilog_codeGen` or in the repository's top level directory.  
-`author` and `tabwidth` can be temporarily overwritten by specifying the respective command line parameter.
-
 
 ## Examples
 
