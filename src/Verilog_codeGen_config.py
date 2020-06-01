@@ -90,9 +90,9 @@ class Verilog_codeGen_config(JSONEncoder):
             try:
                 with open(s_configFile, "r") as file_in:
                     jsonObj = json.load( file_in )
-                    searchPaths = jsonObj["searchPaths"] if jsonObj["searchPaths"] else []
-                    author = jsonObj["author"] if jsonObj["author"] else ""
-                    tabwidth = int(jsonObj["tabwidth"]) if jsonObj["tabwidth"] else 0
+                    searchPaths = jsonObj["searchPaths"] if "searchPaths" in jsonObj else []
+                    author = jsonObj["author"] if "author" in jsonObj else ""
+                    tabwidth = int(jsonObj["tabwidth"]) if "tabwidth" in jsonObj else 0
                     return cls(s_configFile, searchPaths, author, tabwidth)
             except Exception as e:
                 print("Error while reading configuration from " + s_configFile + "!")
